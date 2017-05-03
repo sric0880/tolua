@@ -37,22 +37,13 @@ public class LuaClient : MonoBehaviour
         protected set;
     }
 
+	protected LuaResLoader luaLoader = null;
     protected LuaState luaState = null;
     protected LuaLooper loop = null;
     protected LuaFunction levelLoaded = null;
 
     protected bool openLuaSocket = false;
     protected bool beZbStart = false;
-
-    protected virtual LuaFileUtils InitLoader()
-    {
-        if (LuaFileUtils.Instance != null)
-        {
-            return LuaFileUtils.Instance;
-        }
-
-        return new LuaFileUtils();
-    }
 
     protected virtual void LoadLuaFiles()
     {
@@ -90,11 +81,6 @@ public class LuaClient : MonoBehaviour
         if (!LuaConst.openLuaSocket)
         {                            
             OpenLuaSocket();
-        }
-
-        if (!string.IsNullOrEmpty(LuaConst.zbsDir))
-        {
-            luaState.AddSearchPath(LuaConst.zbsDir);
         }
 
         luaState.LuaDoString(string.Format("DebugServerIp = '{0}'", ip));
@@ -161,9 +147,9 @@ public class LuaClient : MonoBehaviour
     }
 
     protected void Init()
-    {        
-        InitLoader();
-        luaState = new LuaState();
+    {
+		luaLoader  = new LuaResLoader();
+		luaState = new LuaState(luaLoader.ReadFile);
         OpenLibs();
         luaState.LuaSetTop(0);
         Bind();

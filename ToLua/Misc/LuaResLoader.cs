@@ -19,119 +19,57 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-//优先读取persistentDataPath/系统/Lua 目录下的文件（默认下载目录）
-//未找到文件怎读取 Resources/Lua 目录下文件（仍没有使用LuaFileUtil读取）
 using UnityEngine;
-using LuaInterface;
 using System.IO;
-using System.Text;
+using System.Collections.Generic;
 
-public class LuaResLoader : LuaFileUtils
-{
-    public LuaResLoader()
+public class LuaResLoader {
+
+	private readonly Dictionary<string, byte[]> luaChunks = new Dictionary<string, byte[]>();
+	private readonly static List<string> luaDirName = new List<string> { "lua/main/{0}.lua", "lua/tolua/{0}.lua" };
+
+	private static byte[] EditorReadLuaFile(string fileName)
+	{
+		string path = null;
+		foreach (var dir in luaDirName)
+		{
+			path = Path.GetFullPath(string.Format(dir, fileName));
+			if (File.Exists(path))
+			{
+				return File.ReadAllBytes(path);
+			}
+		}
+		return null;
+	}
+
+    public byte[] ReadFile(string fileName)
     {
-        instance = this;
-        beZip = false;
+		if (Application.isEditor)
+		{
+			return EditorReadLuaFile(fileName);
+		}
+		else
+		{
+			return luaChunks.ContainsKey(fileName) ? luaChunks[fileName] : null;
+		}
     }
 
-    public override byte[] ReadFile(string fileName)
-    {
-#if !UNITY_EDITOR
-        byte[] buffer = ReadDownLoadFile(fileName);
-
-        if (buffer == null)
-        {
-            buffer = ReadResourceFile(fileName);
-        }        
-        
-        if (buffer == null)
-        {
-            buffer = base.ReadFile(fileName);
-        }        
-#else
-        byte[] buffer = base.ReadFile(fileName);
-
-        if (buffer == null)
-        {
-            buffer = ReadResourceFile(fileName);
-        }
-
-        if (buffer == null)
-        {
-            buffer = ReadDownLoadFile(fileName);
-        }
-#endif
-
-        return buffer;
-    }
-
-    public override string FindFileError(string fileName)
-    {
-        if (Path.IsPathRooted(fileName))
-        {
-            return fileName;
-        }
-
-        StringBuilder sb = StringBuilderCache.Acquire();
-
-        if (Path.GetExtension(fileName) == ".lua")
-        {
-            fileName = fileName.Substring(0, fileName.Length - 4);
-        }
-
-        for (int i = 0; i < searchPaths.Count; i++)
-        {
-            sb.AppendFormat("\n\tno file '{0}'", searchPaths[i]);
-        }
-
-        sb.AppendFormat("\n\tno file ./Resources/?.lua");
-        sb = sb.Replace("?", fileName);
-        return StringBuilderCache.GetStringAndRelease(sb);
-    }
-
-    byte[] ReadResourceFile(string fileName)
-    {
-        if (!fileName.EndsWith(".lua"))
-        {
-            fileName += ".lua";
-        }
-
-        byte[] buffer = null;
-        string path = "Lua/" + fileName;
-        TextAsset text = Resources.Load(path, typeof(TextAsset)) as TextAsset;
-
-        if (text != null)
-        {
-            buffer = text.bytes;
-            Resources.UnloadAsset(text);
-        }
-
-        return buffer;
-    }
-
-    byte[] ReadDownLoadFile(string fileName)
-    {
-        if (!fileName.EndsWith(".lua"))
-        {
-            fileName += ".lua";
-        }
-
-        string path = fileName;
-
-        if (!Path.IsPathRooted(fileName))
-        {            
-            path = string.Format("{0}/{1}", LuaConst.luaResDir, fileName);            
-        }
-
-        if (File.Exists(path))
-        {
-#if !UNITY_WEBPLAYER
-            return File.ReadAllBytes(path);
-#else
-            throw new LuaException("can't run in web platform, please switch to other platform");
-#endif
-        }
-
-        return null;
-    }
+	//加载bytecode
+	public void LoadluaChunks()
+	{
+		if (!Application.isEditor)
+		{
+			string path = Path.Combine(FileUtils.binary_config_folder, "cb");
+			using (BinaryReader br = new BinaryReader(FileUtils.OpenRead(path)))
+			{
+				while (br.BaseStream.Position != br.BaseStream.Length) //Detect eof of the stream
+				{
+					var name = br.ReadString();
+					var contentLength = br.ReadInt32();
+					var chunk = br.ReadBytes(contentLength);
+					luaChunks[name] = chunk;
+				}
+			}
+		}
+	}
 }

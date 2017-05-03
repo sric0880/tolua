@@ -4,12 +4,13 @@ using System.Collections.Generic;
 using LuaInterface;
 
 using BindType = ToLuaMenu.BindType;
+using UnityEngine.UI;
 using System.Reflection;
 
 public static class CustomSettings
 {
-    public static string saveDir = Application.dataPath + "/Source/Generate/";    
-    public static string toluaBaseType = Application.dataPath + "/ToLua/BaseType/";    
+    public static string saveDir = Application.dataPath + "/tolua/Source/Generate/";    
+    public static string toluaBaseType = Application.dataPath + "/tolua/ToLua/BaseType/";    
 
     //导出时强制做为静态类的类型(注意customTypeList 还要添加这个类型才能导出)
     //unity 有些类作为sealed class, 其实完全等价于静态类
@@ -30,11 +31,8 @@ public static class CustomSettings
     //附加导出委托类型(在导出委托时, customTypeList 中牵扯的委托类型都会导出， 无需写在这里)
     public static DelegateType[] customDelegateList = 
     {        
-        _DT(typeof(Action)),                
-        _DT(typeof(UnityEngine.Events.UnityAction)),
-        _DT(typeof(System.Predicate<int>)),
-        _DT(typeof(System.Action<int>)),
-        _DT(typeof(System.Comparison<int>)),
+        _DT(typeof(Action)),        
+        _DT(typeof(UnityEngine.Events.UnityAction)),              
     };
 
     //在这里添加你要导出注册到lua的类型列表
@@ -42,15 +40,13 @@ public static class CustomSettings
     {                
         //------------------------为例子导出--------------------------------
         //_GT(typeof(TestEventListener)),
-        //_GT(typeof(TestProtol)),
         //_GT(typeof(TestAccount)),
         //_GT(typeof(Dictionary<int, TestAccount>)).SetLibName("AccountMap"),
         //_GT(typeof(KeyValuePair<int, TestAccount>)),    
         //_GT(typeof(TestExport)),
         //_GT(typeof(TestExport.Space)),
         //-------------------------------------------------------------------        
-                
-        _GT(typeof(Debugger)).SetNameSpace(null),        
+        _GT(typeof(Debugger)).SetNameSpace(null),
 
 #if USING_DOTWEENING
         _GT(typeof(DG.Tweening.DOTween)),
@@ -104,9 +100,6 @@ public static class CustomSettings
         _GT(typeof(AsyncOperation)).SetBaseType(typeof(System.Object)),        
         _GT(typeof(LightType)),
         _GT(typeof(SleepTimeout)),
-#if UNITY_5_3_OR_NEWER
-        _GT(typeof(UnityEngine.Experimental.Director.DirectorPlayer)),
-#endif
         _GT(typeof(Animator)),
         _GT(typeof(Input)),
         _GT(typeof(KeyCode)),

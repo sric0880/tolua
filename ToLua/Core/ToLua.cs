@@ -36,9 +36,10 @@ using System.Reflection;
 
 namespace LuaInterface
 {
+	public delegate byte[] LuaLoadFunc(string name);
     public static class ToLua
     {
-        public static bool useRelativePath = true;             //loader使用长路径还是相对路径
+		public static LuaLoadFunc Load = null;
         static Type monoType = typeof(Type).GetType();
 
 #if UNITY_EDITOR
@@ -195,18 +196,12 @@ namespace LuaInterface
             {
                 string fileName = LuaDLL.lua_tostring(L, 1);
                 fileName = fileName.Replace(".", "/");
-                byte[] buffer = LuaFileUtils.Instance.ReadFile(fileName);
+				byte[] buffer = Load(fileName);
 
                 if (buffer == null)
                 {
-                    string error = LuaFileUtils.Instance.FindFileError(fileName);
-                    LuaDLL.lua_pushstring(L, error);
+					LuaDLL.lua_pushstring(L, string.Format("lua file {0} not found", fileName));
                     return 1;
-                }
-
-                if (LuaConst.openZbsDebugger)
-                {
-                    fileName = LuaFileUtils.Instance.FindFile(fileName);
                 }
 
                 if (LuaDLL.luaL_loadbuffer(L, buffer, buffer.Length, fileName) != 0)
@@ -230,12 +225,11 @@ namespace LuaInterface
             {
                 string fileName = LuaDLL.lua_tostring(L, 1);
                 int n = LuaDLL.lua_gettop(L);
-                byte[] buffer = LuaFileUtils.Instance.ReadFile(fileName);
+				byte[] buffer = Load(fileName);
 
                 if (buffer == null)
                 {
                     string error = string.Format("cannot open {0}: No such file or directory", fileName);
-                    error += LuaFileUtils.Instance.FindFileError(fileName);
                     throw new LuaException(error);
                 }
 
@@ -262,12 +256,11 @@ namespace LuaInterface
             try
             {
                 string fileName = LuaDLL.lua_tostring(L, 1);
-                byte[] buffer = LuaFileUtils.Instance.ReadFile(fileName);
+				byte[] buffer = Load(fileName);
 
                 if (buffer == null)
                 {
                     string error = string.Format("cannot open {0}: No such file or directory", fileName);
-                    error += LuaFileUtils.Instance.FindFileError(fileName);
                     throw new LuaException(error);
                 }
 
@@ -525,7 +518,7 @@ namespace LuaInterface
                 int end = LuaConst.toluaDir.LastIndexOf("/Lua");
                 string dir = LuaConst.toluaDir.Substring(start, end - start);
                 dir += "/Core/ToLua.cs";
-                _instanceID = AssetDatabase.LoadAssetAtPath(dir, typeof(MonoScript)).GetInstanceID();//"Assets/ToLua/Core/ToLua.cs"
+				_instanceID = AssetDatabase.LoadAssetAtPath(dir, typeof(MonoScript)).GetInstanceID();//"Assets/ToLua/Core/ToLua.cs"
             }
         }
 

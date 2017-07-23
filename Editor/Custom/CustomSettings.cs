@@ -139,26 +139,26 @@ public static class CustomSettings
 
     public static List<Type> dynamicList = new List<Type>()
     {
-        typeof(MeshRenderer),
+        //typeof(MeshRenderer),
 #if !UNITY_5_4_OR_NEWER
         typeof(ParticleEmitter),
         typeof(ParticleRenderer),
         typeof(ParticleAnimator),
 #endif
 
-        typeof(BoxCollider),
-        typeof(MeshCollider),
-        typeof(SphereCollider),
-        typeof(CharacterController),
-        typeof(CapsuleCollider),
+        //typeof(BoxCollider),
+        //typeof(MeshCollider),
+        //typeof(SphereCollider),
+        //typeof(CharacterController),
+        //typeof(CapsuleCollider),
 
-        typeof(Animation),
-        typeof(AnimationClip),
-        typeof(AnimationState),
+        //typeof(Animation),
+        //typeof(AnimationClip),
+        //typeof(AnimationState),
 
-        typeof(BlendWeights),
-        typeof(RenderTexture),
-        typeof(Rigidbody),
+        //typeof(BlendWeights),
+        //typeof(RenderTexture),
+        //typeof(Rigidbody),
     };
 
     //重载函数，相同参数个数，相同位置out参数匹配出问题时, 需要强制匹配解决

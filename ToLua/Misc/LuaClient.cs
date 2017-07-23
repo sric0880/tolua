@@ -25,7 +25,7 @@ using LuaInterface;
 using System.Collections;
 using System.IO;
 using System;
-#if UNITY_5
+#if UNITY_5_4_OR_NEWER
 using UnityEngine.SceneManagement;
 #endif
 
@@ -122,7 +122,8 @@ public class LuaClient : MonoBehaviour
     protected virtual void Bind()
     {        
         LuaBinder.Bind(luaState);
-        LuaCoroutine.Register(luaState, this);
+        DelegateFactory.Init();   
+        LuaCoroutine.Register(luaState, this);        
     }
 
     protected void Init()
@@ -131,8 +132,8 @@ public class LuaClient : MonoBehaviour
 		luaState = new LuaState(luaLoader.ReadFile);
         OpenLibs();
         luaState.LuaSetTop(0);
-        Bind();
-        LoadLuaFiles();    
+        Bind();        
+        LoadLuaFiles();        
     }
 
     protected void Awake()
@@ -149,7 +150,7 @@ public class LuaClient : MonoBehaviour
     {
         luaState.Start();
         StartLooper();
-        StartMain();
+        StartMain();        
     }
 
     void OnLevelLoaded(int level)
@@ -163,8 +164,7 @@ public class LuaClient : MonoBehaviour
         }
 
         if (luaState != null)
-        {
-            //luaState.LuaGC(LuaGCOptions.LUA_GCCOLLECT);
+        {            
             luaState.RefreshDelegateMap();
         }
     }

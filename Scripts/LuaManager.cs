@@ -18,6 +18,8 @@ namespace LuaFramework {
 			luaResLoader.LoadluaChunks();
 
 			this.lua.Start();    //启动LUAVM
+			DelegateFactory.Init();
+
 			this.StartMain();
 		}
 
@@ -56,18 +58,20 @@ namespace LuaFramework {
             return lua.DoFile(filename);
         }
 
-        // Update is called once per frame
-        public object[] CallFunction(string funcName, params object[] args) {
-            LuaFunction func = lua.GetFunction(funcName);
-            if (func != null) {
-                return func.Call(args);
-            }
-            return null;
+        public T ToDelegate<T>(string funcName) where T : class
+		{
+            LuaFunction luaFunc = lua.GetFunction(funcName);
+			return luaFunc.ToDelegate<T>();
         }
 
-		public object[] CallModuleFunction(string module, string func, params object[] args)
+		public LuaFunction GetLuaFunc(string tablename, string func)
 		{
-			return CallFunction(module + "." + func, args);
+			return lua.GetFunction(tablename + "." + func);
+		}
+
+		public LuaFunction GetLuaFunc(string func)
+		{
+			return lua.GetFunction(func);
 		}
 
         public void LuaGC() {

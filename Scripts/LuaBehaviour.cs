@@ -7,27 +7,41 @@ using UnityEngine.UI;
 
 namespace LuaFramework {
 	public class LuaBehaviour : MonoBehaviour{
+		public bool hasStartFunc;
+		public bool hasEnableFunc;
         private Dictionary<string, LuaFunction> buttons = new Dictionary<string, LuaFunction>();
 
-        protected void Awake() {
-			LuaManager.Instance.CallModuleFunction(name, "Awake", gameObject);
+        void Awake() {
+			var awakeFunc = LuaManager.Instance.GetLuaFunc(name, "Awake");
+			if (awakeFunc != null)
+			{
+				awakeFunc.Call(gameObject);
+			}
         }
 
-        protected void Start() {
-            LuaManager.Instance.CallModuleFunction(name, "Start");
+		void OnEnable()
+		{
+			if (hasEnableFunc)
+			{
+				var enableFunc = LuaManager.Instance.GetLuaFunc(name, "OnEnable");
+				if (enableFunc!= null)
+				{
+					enableFunc.Call();
+				}
+			}
+		}
+
+        void Start() {
+			if (hasStartFunc)
+			{
+				var startFunc = LuaManager.Instance.GetLuaFunc(name, "Start");
+				if (startFunc != null)
+				{
+					startFunc.Call();
+				}
+			}
         }
 
-        protected void OnClick() {
-            LuaManager.Instance.CallModuleFunction(name, "OnClick");
-        }
-
-        protected void OnClickEvent(GameObject go) {
-            LuaManager.Instance.CallModuleFunction(name, "OnClick", go);
-        }
-
-        /// <summary>
-        /// 添加单击事件
-        /// </summary>
         public void AddClick(GameObject go, LuaFunction luafunc) {
             if (go == null || luafunc == null) return;
             buttons.Add(go.name, luafunc);

@@ -45,8 +45,12 @@ public static class ToLuaMenu
     public static List<Type> dropType = new List<Type>
     {
         typeof(ValueType),                                  //不需要
-#if !UNITY_5
+#if !UNITY_5 && !UNITY_2017
         typeof(Motion),                                     //很多平台只是空类
+#endif
+
+#if UNITY_5_3_OR_NEWER
+        typeof(UnityEngine.CustomYieldInstruction),
 #endif
         typeof(UnityEngine.YieldInstruction),               //无需导出的类      
         typeof(UnityEngine.WaitForEndOfFrame),              //内部支持
@@ -244,6 +248,12 @@ public static class ToLuaMenu
         if (t == null)
         {
             return;
+        }
+
+        if (CustomSettings.sealedList.Contains(t))
+        {
+            CustomSettings.sealedList.Remove(t);
+            Debugger.LogError("{0} not a sealed class, it is parent of {1}", LuaMisc.GetTypeName(t), bt.name);
         }
 
         if (t.IsInterface)
@@ -771,7 +781,7 @@ public static class ToLuaMenu
         string bundleName = subDir == null ? "lua.unity3d" : "lua" + subDir.Replace('/', '_') + ".unity3d";
         bundleName = bundleName.ToLower();
 
-#if UNITY_5        
+#if UNITY_5 || UNITY_2017
         for (int i = 0; i < files.Length; i++)
         {
             AssetImporter importer = AssetImporter.GetAtPath(files[i]);            
@@ -782,7 +792,7 @@ public static class ToLuaMenu
                 importer.assetBundleVariant = null;                
             }
         }
-#else        
+#else
         List<Object> list = new List<Object>();
 
         for (int i = 0; i < files.Length; i++)
@@ -799,7 +809,7 @@ public static class ToLuaMenu
             File.Delete(output);
             BuildPipeline.BuildAssetBundle(null, list.ToArray(), output, options, EditorUserBuildSettings.activeBuildTarget);            
         }
-#endif        
+#endif
     }
 
     static void ClearAllLuaFiles()
@@ -1092,4 +1102,4 @@ public static class ToLuaMenu
         Debug.Log("Clear base type wrap files over");
         AssetDatabase.Refresh();
     }
-            }
+}

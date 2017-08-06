@@ -74,6 +74,11 @@ namespace LuaFramework {
 			return lua.GetFunction(func);
 		}
 
+		public LuaTable GetLuaTable(string filepath)
+		{
+			return lua.GetTable(filepath);
+		}
+
         public void LuaGC() {
             lua.LuaGC(LuaGCOptions.LUA_GCCOLLECT);
         }

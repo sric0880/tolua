@@ -19,55 +19,48 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 */
-using UnityEngine;
-using System.IO;
 using System.Collections.Generic;
+using System.IO;
+using UnityEngine;
 
 public class LuaResLoader {
 
-	private readonly Dictionary<string, byte[]> luaChunks = new Dictionary<string, byte[]>();
+	private readonly Dictionary<string, byte[]> luaChunks = new Dictionary<string, byte[]> ();
 	private readonly static List<string> luaDirName = new List<string> { "lua/main/{0}.lua", "lua/tolua/{0}.lua" };
 
-	private static byte[] EditorReadLuaFile(string fileName)
-	{
+	private static byte[] EditorReadLuaFile (string fileName) {
 		string path = null;
-		foreach (var dir in luaDirName)
-		{
-			path = Path.GetFullPath(string.Format(dir, fileName));
-			if (File.Exists(path))
-			{
-				return File.ReadAllBytes(path);
+		foreach (var dir in luaDirName) {
+			path = Path.GetFullPath (string.Format (dir, fileName));
+			if (File.Exists (path)) {
+				return File.ReadAllBytes (path);
 			}
 		}
 		return null;
 	}
 
-    public byte[] ReadFile(string fileName)
-    {
-		if (Application.isEditor)
-		{
-			return EditorReadLuaFile(fileName);
+	public byte[] ReadFile (string fileName) {
+		if (Application.isEditor) {
+			return EditorReadLuaFile (fileName);
+		} else {
+			return luaChunks.ContainsKey (fileName) ? luaChunks[fileName] : null;
 		}
-		else
-		{
-			return luaChunks.ContainsKey(fileName) ? luaChunks[fileName] : null;
-		}
-    }
+	}
 
 	//加载bytecode
-	public void LoadluaChunks()
-	{
-		if (!Application.isEditor)
-		{
-			string path = Path.Combine(FileUtils.binary_config_folder, "cb");
-			using (BinaryReader br = new BinaryReader(FileUtils.OpenRead(path)))
-			{
-				while (br.BaseStream.Position != br.BaseStream.Length) //Detect eof of the stream
-				{
-					var name = br.ReadString();
-					var contentLength = br.ReadInt32();
-					var chunk = br.ReadBytes(contentLength);
-					luaChunks[name] = chunk;
+	public void LoadluaChunks () {
+		if (!Application.isEditor) {
+			string path = Path.Combine (FileUtils.binary_config_folder, "cb");
+			var stream = FileUtils.GetMemoryStreamFromFile (path);
+			if (stream != null) {
+				using (BinaryReader br = new BinaryReader (stream)) {
+					while (br.BaseStream.Position != br.BaseStream.Length) //Detect eof of the stream
+					{
+						var name = br.ReadString ();
+						var contentLength = br.ReadInt32 ();
+						var chunk = br.ReadBytes (contentLength);
+						luaChunks[name] = chunk;
+					}
 				}
 			}
 		}
